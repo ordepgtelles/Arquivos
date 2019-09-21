@@ -1,0 +1,82 @@
+import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.Collections;
+
+public class Main {
+
+	public static void main(String[] args) throws Exception {
+
+		RandomAccessFile f = new RandomAccessFile("cep.dat", "r");
+		long tamanho = 0, quantidade = 0;
+
+		tamanho = f.length() / 300;
+		quantidade = 8;
+
+		long tamanhoPorArquivo = tamanho / quantidade;
+		long tamanhoUltimoArquivo = tamanhoPorArquivo + (tamanho % quantidade);
+		long maximo = 0;
+
+		for (int i = 0; i < quantidade; i++) {
+
+			if (i == quantidade - 1) {
+				maximo = tamanhoUltimoArquivo;
+			} else {
+				maximo = tamanhoPorArquivo;
+			}
+
+			ArrayList<Endereco> a = new ArrayList<Endereco>();
+
+			for (int j = 0; j < maximo; j++) {
+				Endereco e = new Endereco();
+				e.leEndereco(f);
+				a.add(e);
+			}
+			Collections.sort(a, new ComparaCEP());
+			RandomAccessFile f1 = new RandomAccessFile("cep" + i + ".dat", "rw");
+			for (Endereco e : a) {
+				e.escreveEndereco(f1);
+			}
+			f1.close();
+		}
+		f.close();
+
+		int k = 0, j = 0;
+		for (int i = 0; i < quantidade - 1; i++) {
+			long p = 0;
+			j = k + 1;
+			p = i + quantidade;
+			RandomAccessFile f1 = new RandomAccessFile("cep" + k + ".dat", "r");
+			RandomAccessFile f2 = new RandomAccessFile("cep" + j + ".dat", "r");
+			RandomAccessFile ff = new RandomAccessFile("cep" + p + ".dat", "rw");
+			
+			Endereco e1 = new Endereco();
+			e1.leEndereco(f1);
+			Endereco e2 = new Endereco();
+			e2.leEndereco(f2);
+			
+			while(f1.getFilePointer() < tamanho && f2.getFilePointer() < tamanho){
+				
+				if(new ComparaCEP().compare(e1, e2) < 0) {
+					e1.escreveEndereco(ff);
+					e1.leEndereco(f1);
+				}
+				else {
+					e2.escreveEndereco(ff);
+					e2.leEndereco(f2);
+				}
+			}	
+			while(f1.getFilePointer() < f1.length()) {
+				e1.escreveEndereco(ff);
+				e1.leEndereco(f1);
+			}
+			while(f2.getFilePointer() < f2.length()) {
+				e2.escreveEndereco(ff);
+				e2.leEndereco(f2);
+			}
+			k = k + 2;
+			f1.close();
+			f2.close();
+			ff.close();
+		}
+	}
+}
