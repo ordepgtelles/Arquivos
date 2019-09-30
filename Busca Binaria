@@ -1,69 +1,31 @@
-#include <stdio.h>
-#include <string.h>
- 
-typedef struct _Endereco Endereco;
- 
-struct _Endereco
-{
-    char logradouro[72];
-    char bairro[72];
-    char cidade[72];
-    char uf[72];
-    char sigla[2];
-    char cep[8];
-    char lixo[2];
-};
- 
-int main(int argc, char**argv)
-{
-    FILE *f;
-    Endereco e;
-    long p, inicio, fim, meio;
-    int i = 0;
- 
-    if(argc != 2)
-    {
-        fprintf(stderr, "USO: %s [CEP]", argv[0]);
-        return 1;
-    }
-    
-    f = fopen("cep_ordenado.dat", "r");
-    fseek(f, 0, SEEK_END);
-    p = ftell(f);           //guarda em p a posicao da ultima linha do arquivo
-    rewind(f);        
-    
-    inicio = 0;
-    fim = (p/sizeof(Endereco))-1; 
-    
-    
-    while (inicio <= fim)
-    {
-        i++;
-        meio = (inicio + fim)/2;
-        fseek(f, meio*sizeof(Endereco), SEEK_SET);
-        fread(&e, sizeof(Endereco), 1, f);
-        
-        if(strncmp(argv[1], e.cep, 8) == 0)
-        {
-            printf("ENDERECO PESQUISADO:\n");
-            printf("%.72s\n%.72s\n%.72s\n%.72s\n%.2s\n%.8s\n", e.logradouro, e.bairro, e.cidade, e.uf, e.sigla, e.cep);
-            
-            break;
-        }
+import java.io.RandomAccessFile;
 
-        else
-            if(strncmp(argv[1], e.cep, 8) > 0)
-            {
-                inicio = meio + 1;
-            }
-            else
-            {
-                fim = meio - 1;
-            }     
-    
-    }
-    printf("%d\n", i);
-
-    fclose(f);
-    return 0;
+public class Main {
+	
+	public static void main (String [] args) throws Exception {
+		
+		String cepPesq = " ";
+		RandomAccessFile f = new RandomAccessFile("cep_ordenado.dat", "r");
+		long inicio, meio, fim;
+		inicio = 0;
+		fim = f.length()/300;
+		
+		while(inicio <= fim) {
+			meio = (inicio/fim)/2;
+			Endereco e = new Endereco();
+			f.seek(meio);
+			e.leEndereco(f);
+			
+			if(e.getCep().compareTo(cepPesq) == 0) {
+				System.out.println(e);
+			} else {
+				if(e.getCep().compareTo(cepPesq) < 0) {
+					fim = meio - 1;
+				} else {
+					inicio = meio + 1;
+				}
+			}
+		}
+		f.close();
+	}
 }
